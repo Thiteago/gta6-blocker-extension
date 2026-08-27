@@ -11,7 +11,7 @@ function createOverlay(container) {
   overlay.textContent = "Hidden — possible GTA VI content (click to reveal)";
   Object.assign(overlay.style, {
     position: "absolute",
-    zIndex: "2147483647",
+    zIndex: "1",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -48,10 +48,16 @@ function stopTracking(container) {
   }
 }
 
+function isEffectivelyVisible(container) {
+  if (!container.isConnected) return false;
+  const rect = container.getBoundingClientRect();
+  return rect.width > 4 && rect.height > 4;
+}
+
 function tick() {
   for (const [container, overlay] of trackedOverlays) {
-    if (!container.isConnected) {
-      stopTracking(container);
+    if (!isEffectivelyVisible(container)) {
+      revealElement(container);
       continue;
     }
     positionOverlay(overlay, container);
