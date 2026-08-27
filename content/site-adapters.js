@@ -1,3 +1,5 @@
+import { closestAcrossShadow } from "./dom-utils.js";
+
 export const SITE_ADAPTERS = [
   {
     id: "youtube",
@@ -35,20 +37,23 @@ export function getAdapterForHostname(hostname) {
 export function findContainer(node, adapter) {
   const selectors = adapter?.containerSelectors ?? [];
   for (const selector of selectors) {
-    const match = node.closest(selector);
+    const match = closestAcrossShadow(node, selector);
     if (match) return match;
   }
   return findGenericContainer(node);
 }
 
 function findGenericContainer(node) {
-  let current = node.closest(GENERIC_CONTAINER_SELECTOR);
+  let current = closestAcrossShadow(node, GENERIC_CONTAINER_SELECTOR);
   while (current) {
     const { width, height } = current.getBoundingClientRect();
     if (width * height >= MIN_CONTAINER_AREA) return current;
-    const parent = current.parentElement?.closest(GENERIC_CONTAINER_SELECTOR);
-    if (!parent || parent === current) break;
-    current = parent;
+
+    const parentNode = current.parentNode;
+    const parentHost = parentNode instanceof ShadowRoot ? parentNode.host : current.parentElement;
+    const next = parentHost ? closestAcrossShadow(parentHost, GENERIC_CONTAINER_SELECTOR) : null;
+    if (!next || next === current) break;
+    current = next;
   }
   return current ?? node;
 }
