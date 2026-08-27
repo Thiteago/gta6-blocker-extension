@@ -1,26 +1,22 @@
-export function observeMutations(root, onMutation) {
-  const observedRoots = new WeakSet();
+const MUTATION_DEBOUNCE_MS = 200;
+const RESCAN_INTERVAL_MS = 2000;
 
-  function attach(node) {
-    if (observedRoots.has(node)) return;
-    observedRoots.add(node);
+export function watchForChanges(callback) {
+  let debounceId = null;
 
-    const observer = new MutationObserver((mutations) => {
-      const addedNodes = mutations.flatMap((mutation) => Array.from(mutation.addedNodes));
-      const relevantNodes = addedNodes.filter((node) => node.nodeType === Node.ELEMENT_NODE);
-      for (const added of relevantNodes) attachToSubtree(added);
-      if (relevantNodes.length > 0) onMutation(relevantNodes);
-    });
+  const mutationObserver = new MutationObserver(() => {
+    if (debounceId !== null) clearTimeout(debounceId);
+    debounceId = setTimeout(callback, MUTATION_DEBOUNCE_MS);
+  });
+  mutationObserver.observe(document.body, { childList: true, subtree: true });
 
-    observer.observe(node, { childList: true, subtree: true });
-  }
+  const intervalId = setInterval(() => {
+    if (document.visibilityState === "visible") callback();
+  }, RESCAN_INTERVAL_MS);
 
-  function attachToSubtree(node) {
-    if (node.nodeType !== Node.ELEMENT_NODE) return;
-    if (node.shadowRoot) attach(node.shadowRoot);
-    for (const child of node.children) attachToSubtree(child);
-  }
-
-  attach(root);
-  attachToSubtree(root);
+  return () => {
+    mutationObserver.disconnect();
+    clearInterval(intervalId);
+    if (debounceId !== null) clearTimeout(debounceId);
+  };
 }

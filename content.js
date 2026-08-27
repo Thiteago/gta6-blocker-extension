@@ -7,7 +7,7 @@
     chrome.runtime.getURL("content/site-adapters.js")
   );
   const { blurElement, isBlurred } = await import(chrome.runtime.getURL("content/blur.js"));
-  const { observeMutations } = await import(chrome.runtime.getURL("content/observer.js"));
+  const { watchForChanges } = await import(chrome.runtime.getURL("content/observer.js"));
 
   const adapter = getAdapterForHostname(location.hostname);
 
@@ -40,9 +40,7 @@
     if (!enabled) return;
 
     scan(document.body);
-    observeMutations(document.body, (addedNodes) => {
-      for (const node of addedNodes) scan(node);
-    });
+    watchForChanges(() => scan(document.body));
   }
 
   onSettingsChanged(async () => {
