@@ -6,7 +6,7 @@
   const { getAdapterForHostname, findContainer } = await import(
     chrome.runtime.getURL("content/site-adapters.js")
   );
-  const { blurElement, isBlurred } = await import(chrome.runtime.getURL("content/blur.js"));
+  const { blurElement, isBlurred, revealAll } = await import(chrome.runtime.getURL("content/blur.js"));
   const { watchForChanges } = await import(chrome.runtime.getURL("content/observer.js"));
 
   const adapter = getAdapterForHostname(location.hostname);
@@ -14,6 +14,7 @@
   let enabled = true;
   let regex = null;
   let hiddenCount = 0;
+  let lastHref = location.href;
 
   function siteIsEnabled(sites) {
     if (!adapter) return true;
@@ -32,6 +33,15 @@
     }
   }
 
+  function handleChange() {
+    if (location.href !== lastHref) {
+      lastHref = location.href;
+      revealAll();
+      hiddenCount = 0;
+    }
+    scan(document.body);
+  }
+
   async function init() {
     const settings = await getSettings();
     enabled = settings.enabled && siteIsEnabled(settings.sites);
@@ -40,7 +50,7 @@
     if (!enabled) return;
 
     scan(document.body);
-    watchForChanges(() => scan(document.body));
+    watchForChanges(handleChange);
   }
 
   onSettingsChanged(async () => {

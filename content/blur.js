@@ -82,3 +82,9 @@ export function revealElement(container) {
 export function isBlurred(element) {
   return element.hasAttribute(BLURRED_ATTR);
 }
+
+export function revealAll() {
+  for (const container of [...trackedOverlays.keys()]) {
+    revealElement(container);
+  }
+}
