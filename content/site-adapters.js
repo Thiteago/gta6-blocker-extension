@@ -10,7 +10,8 @@ export const SITE_ADAPTERS = [
       "ytd-rich-item-renderer",
       "ytd-compact-video-renderer",
       "ytd-grid-video-renderer",
-      "ytd-playlist-video-renderer"
+      "ytd-playlist-video-renderer",
+      "ytd-notification-renderer"
     ]
   },
   {
@@ -29,6 +30,7 @@ export const SITE_ADAPTERS = [
 
 const GENERIC_CONTAINER_SELECTOR = "article, li, section, div";
 const MIN_CONTAINER_AREA = 2000;
+const MAX_CLIMB_STEPS = 5;
 
 export function getAdapterForHostname(hostname) {
   return SITE_ADAPTERS.find((adapter) => adapter.hostnames.includes(hostname)) ?? null;
@@ -45,15 +47,18 @@ export function findContainer(node, adapter) {
 
 function findGenericContainer(node) {
   let current = closestAcrossShadow(node, GENERIC_CONTAINER_SELECTOR);
-  while (current) {
+  let steps = 0;
+
+  while (current && steps < MAX_CLIMB_STEPS) {
     const { width, height } = current.getBoundingClientRect();
     if (width * height >= MIN_CONTAINER_AREA) return current;
 
+    steps += 1;
     const parentNode = current.parentNode;
     const parentHost = parentNode instanceof ShadowRoot ? parentNode.host : current.parentElement;
     const next = parentHost ? closestAcrossShadow(parentHost, GENERIC_CONTAINER_SELECTOR) : null;
     if (!next || next === current) break;
     current = next;
   }
-  return current ?? node;
+  return null;
 }

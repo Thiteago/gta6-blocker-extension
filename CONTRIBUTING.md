@@ -22,7 +22,7 @@ Adding a site is a two-file change:
    - `id` is the key used in the per-site toggle stored via `chrome.storage`
    - `label` is what shows up in the options page
    - `hostnames` must match `location.hostname` on the target site
-   - `containerSelectors` is an ordered list of CSS selectors tried via `element.closest(...)`, crossing Shadow DOM boundaries; the first match wins. If none match, a generic fallback picks the nearest reasonably-sized block ancestor
+   - `containerSelectors` is an ordered list of CSS selectors tried via `element.closest(...)`, crossing Shadow DOM boundaries; the first match wins. If none match, a generic fallback picks the nearest reasonably-sized block ancestor, giving up (no blur) after a few ancestor levels rather than risk grabbing something as broad as an entire panel/menu — precise selectors matter most for compact UI like notification dropdowns or menus, where the generic fallback is more likely to bail out
    - Many modern sites (YouTube, Reddit) render their feeds inside custom elements with a shadow root — `containerSelectors` still works fine against those since `content/dom-utils.js` pierces Shadow DOM, but keep this in mind when inspecting a new site's markup in DevTools (look inside `#shadow-root` nodes for the real structure)
 
 No adapter selectors are required to be perfect on day one — the generic fallback in `content/site-adapters.js` keeps things working while selectors get refined.

@@ -1,6 +1,7 @@
 import { EXTENSION_UI_ATTR } from "./dom-utils.js";
 
 const BLURRED_ATTR = "data-gta6-blurred";
+const REVEALED_ATTR = "data-gta6-revealed";
 
 const trackedOverlays = new Map();
 let rafId = null;
@@ -24,7 +25,7 @@ function createOverlay(container) {
     padding: "8px",
     boxSizing: "border-box"
   });
-  overlay.addEventListener("click", () => revealElement(container));
+  overlay.addEventListener("click", () => revealAndIgnore(container));
   document.body.appendChild(overlay);
   return overlay;
 }
@@ -90,6 +91,15 @@ export function revealElement(container) {
 
 export function isBlurred(element) {
   return element.hasAttribute(BLURRED_ATTR);
+}
+
+export function isRevealed(element) {
+  return element.hasAttribute(REVEALED_ATTR);
+}
+
+export function revealAndIgnore(container) {
+  revealElement(container);
+  container.setAttribute(REVEALED_ATTR, "true");
 }
 
 export function revealAll() {

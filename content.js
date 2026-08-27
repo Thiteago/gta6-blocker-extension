@@ -6,7 +6,9 @@
   const { getAdapterForHostname, findContainer } = await import(
     chrome.runtime.getURL("content/site-adapters.js")
   );
-  const { blurElement, isBlurred, revealAll } = await import(chrome.runtime.getURL("content/blur.js"));
+  const { blurElement, isBlurred, isRevealed, revealAll } = await import(
+    chrome.runtime.getURL("content/blur.js")
+  );
   const { watchForChanges } = await import(chrome.runtime.getURL("content/observer.js"));
 
   const adapter = getAdapterForHostname(location.hostname);
@@ -27,7 +29,7 @@
     const textNodes = findMatchingTextNodes(root, regex);
     for (const textNode of textNodes) {
       const container = findContainer(textNode.parentElement, adapter);
-      if (!container || isBlurred(container)) continue;
+      if (!container || isBlurred(container) || isRevealed(container)) continue;
       blurElement(container);
       hiddenCount += 1;
     }
