@@ -1,3 +1,5 @@
+import { EXTENSION_UI_ATTR } from "./dom-utils.js";
+
 const BLURRED_ATTR = "data-gta6-blurred";
 
 const trackedOverlays = new Map();
@@ -5,6 +7,7 @@ let rafId = null;
 
 function createOverlay(container) {
   const overlay = document.createElement("div");
+  overlay.setAttribute(EXTENSION_UI_ATTR, "true");
   overlay.textContent = "Hidden — possible GTA VI content (click to reveal)";
   Object.assign(overlay.style, {
     position: "absolute",
