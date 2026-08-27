@@ -1,28 +1,13 @@
 const BLURRED_ATTR = "data-gta6-blurred";
-const OVERLAY_ATTR = "data-gta6-overlay";
 
-export function blurElement(container) {
-  if (isBlurred(container)) return;
+const trackedOverlays = new Map();
+let rafId = null;
 
-  const wrapper = document.createElement("div");
-  const displayType = getComputedStyle(container).display;
-  wrapper.style.position = "relative";
-  wrapper.style.display = displayType === "inline" ? "inline-block" : displayType;
-
-  container.replaceWith(wrapper);
-  wrapper.appendChild(container);
-
-  container.setAttribute(BLURRED_ATTR, "true");
-  container.style.setProperty("filter", "blur(16px)", "important");
-  container.style.setProperty("pointer-events", "none", "important");
-  container.style.setProperty("user-select", "none", "important");
-
+function createOverlay(container) {
   const overlay = document.createElement("div");
-  overlay.setAttribute(OVERLAY_ATTR, "true");
   overlay.textContent = "Hidden — possible GTA VI content (click to reveal)";
   Object.assign(overlay.style, {
     position: "absolute",
-    inset: "0",
     zIndex: "2147483647",
     display: "flex",
     alignItems: "center",
@@ -33,11 +18,57 @@ export function blurElement(container) {
     textAlign: "center",
     cursor: "pointer",
     borderRadius: "8px",
-    padding: "8px"
+    padding: "8px",
+    boxSizing: "border-box"
   });
   overlay.addEventListener("click", () => revealElement(container));
+  document.body.appendChild(overlay);
+  return overlay;
+}
 
-  wrapper.appendChild(overlay);
+function positionOverlay(overlay, container) {
+  const rect = container.getBoundingClientRect();
+  overlay.style.top = `${rect.top + window.scrollY}px`;
+  overlay.style.left = `${rect.left + window.scrollX}px`;
+  overlay.style.width = `${rect.width}px`;
+  overlay.style.height = `${rect.height}px`;
+}
+
+function stopTracking(container) {
+  const overlay = trackedOverlays.get(container);
+  if (!overlay) return;
+  overlay.remove();
+  trackedOverlays.delete(container);
+  if (trackedOverlays.size === 0 && rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+}
+
+function tick() {
+  for (const [container, overlay] of trackedOverlays) {
+    if (!container.isConnected) {
+      stopTracking(container);
+      continue;
+    }
+    positionOverlay(overlay, container);
+  }
+  rafId = trackedOverlays.size > 0 ? requestAnimationFrame(tick) : null;
+}
+
+export function blurElement(container) {
+  if (isBlurred(container)) return;
+
+  container.setAttribute(BLURRED_ATTR, "true");
+  container.style.setProperty("filter", "blur(16px)", "important");
+  container.style.setProperty("pointer-events", "none", "important");
+  container.style.setProperty("user-select", "none", "important");
+
+  const overlay = createOverlay(container);
+  positionOverlay(overlay, container);
+  trackedOverlays.set(container, overlay);
+
+  if (rafId === null) rafId = requestAnimationFrame(tick);
 }
 
 export function revealElement(container) {
@@ -45,7 +76,7 @@ export function revealElement(container) {
   container.style.removeProperty("filter");
   container.style.removeProperty("pointer-events");
   container.style.removeProperty("user-select");
-  container.parentElement?.querySelector(`[${OVERLAY_ATTR}]`)?.remove();
+  stopTracking(container);
 }
 
 export function isBlurred(element) {
