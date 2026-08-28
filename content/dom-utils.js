@@ -1,6 +1,6 @@
 export const EXTENSION_UI_ATTR = "data-gta6-extension-ui";
 
-export function collectTextNodes(root) {
+export function collectTextNodes(root, skipSelector) {
   const textNodes = [];
   walk(root);
   return textNodes;
@@ -13,6 +13,7 @@ export function collectTextNodes(root) {
     if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return;
     if (node.tagName === "SCRIPT" || node.tagName === "STYLE") return;
     if (node.hasAttribute?.(EXTENSION_UI_ATTR)) return;
+    if (skipSelector && node.matches?.(skipSelector)) return;
     if (node.shadowRoot) walk(node.shadowRoot);
     for (const child of node.childNodes) walk(child);
   }

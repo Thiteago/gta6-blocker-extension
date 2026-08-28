@@ -3,7 +3,7 @@
   const { buildTermRegex, findMatchingTextNodes } = await import(
     chrome.runtime.getURL("content/matcher.js")
   );
-  const { getAdapterForHostname, findContainer } = await import(
+  const { getAdapterForHostname, findContainer, getSkipSelector } = await import(
     chrome.runtime.getURL("content/site-adapters.js")
   );
   const { blurElement, isBlurred, isRevealed, revealAll } = await import(
@@ -12,6 +12,7 @@
   const { watchForChanges } = await import(chrome.runtime.getURL("content/observer.js"));
 
   const adapter = getAdapterForHostname(location.hostname);
+  const skipSelector = getSkipSelector(adapter);
 
   let enabled = true;
   let regex = null;
@@ -26,7 +27,7 @@
   function scan(root) {
     if (!enabled || !regex) return;
 
-    const textNodes = findMatchingTextNodes(root, regex);
+    const textNodes = findMatchingTextNodes(root, regex, skipSelector);
     for (const textNode of textNodes) {
       const container = findContainer(textNode.parentElement, adapter);
       if (!container || isBlurred(container) || isRevealed(container)) continue;

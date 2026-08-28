@@ -9,6 +9,6 @@ export function buildTermRegex(terms) {
   return new RegExp(`\\b(?:${pattern})\\b`, "i");
 }
 
-export function findMatchingTextNodes(root, regex) {
-  return collectTextNodes(root).filter((node) => regex.test(node.textContent));
+export function findMatchingTextNodes(root, regex, skipSelector) {
+  return collectTextNodes(root, skipSelector).filter((node) => regex.test(node.textContent));
 }
